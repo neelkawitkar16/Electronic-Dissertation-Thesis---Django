@@ -12,37 +12,7 @@
   <a href="{% url 'signup' %}">Sign Up</a> -->
 {% endif %}
 
-
-<!--Search bar  -->
-<div class="row justify-content-center padding" style="margin-top: 180px;">
-  <div class="col-md-8 ftco-animate fadeInUp ftco-animated">
-    <h2>Search Engine</h2>
-    <form action="#" class="domain-form" role="search" id="form">
-      <div class="form-group d-md-flex"> <input type="search" id="query" name="q"
-          aria-label="Search through site content" class="form-control px-4"
-          placeholder="What are you searching for...">
-        <input type="submit" class="search-domain btn btn-primary px-5" value="Search">
-      </div>
-    </form>
-    </p>
-  </div>
-</div>
-<!-- javascript -->
-<script>
-  const f = document.getElementById('form');
-  const q = document.getElementById('query');
-  const google = 'https://www.google.com/search?q=site%3A+';
-  const site = 'google.com';
-
-  function submitted(event) {
-    event.preventDefault();
-    const url = google + site + '+' + q.value;
-    const win = window.open(url, '_blank');
-    win.focus();
-  }
-
-  f.addEventListener('submit', submitted);
-</script>
+{% include "searchbar.html" %}
 
 
 {% endblock content %}

@@ -11,13 +11,13 @@ class CustomUserCreationForm(UserCreationForm):
       if CustomUser.objects.filter(email=self.cleaned_data['email']).exists():
           raise forms.ValidationError("the given email is already registered")
       return self.cleaned_data['email']
-
+      
   class Meta(UserCreationForm):
-    model = CustomUser
-    fields = UserCreationForm.Meta.fields + ('username', 'email', 'age')
-    
-    
+      model = CustomUser
+      fields = ('username',  'email', 'first_name', 'last_name')  # new
+
+
 class CustomUserChangeForm(UserChangeForm):
-  class Meta:
-    model = CustomUser
-    fields = UserChangeForm.Meta.fields
+    class Meta:
+        model = CustomUser
+        fields = ('email',)  # new

@@ -38,7 +38,7 @@ class HomeForm(forms.ModelForm):
 
     contributor_department = forms.CharField(max_length=150, required=False,
                                              widget=forms.TextInput(attrs={'class': 'form-control',
-                                                                           'placeholder': 'Department name?'}))
+                                                                           'placeholder': 'Eg: Computer Science'}))
 
     contributor_committeechair = forms.CharField(max_length=150, required=False,
                                                  widget=forms.TextInput(attrs={'class': 'form-control',
@@ -47,8 +47,16 @@ class HomeForm(forms.ModelForm):
     description_degree = forms.CharField(max_length=150, required=False,
                                          widget=forms.TextInput(attrs={'class': 'form-control',
                                                                        'placeholder': 'PhD,...'}))
+    
+    publisher = forms.CharField(max_length=150, required=False,
+                                widget=forms.TextInput(attrs={'class': 'form-control',
+                                                                       'placeholder': 'Eg: Virginia Tech'}))
 
-    YEARS = [x for x in range(1940, 2500)]
+    date_issued = forms.CharField(max_length=150, required=False,
+                                  widget=forms.TextInput(attrs={'class': 'form-control',
+                                                                'placeholder': 'Eg: 1999-07-06'}))
+
+    YEARS = [x for x in range(1900, 2500)]
     date1 = forms.DateField(
         label='', widget=forms.SelectDateWidget(years=YEARS))
     date2 = forms.DateField(label='', widget=forms.SelectDateWidget(

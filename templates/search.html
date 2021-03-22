@@ -1,7 +1,6 @@
 <div class="container">
   <form method="post">
     {%csrf_token%}
-    <!-- {{form.as_p}} -->
     <div style="padding: 150px 140px">
       <div class="fieldWrapper" style=" width: 700px;">
         {{ form.searchtext.errors }}
@@ -11,11 +10,10 @@
           value="Search">
 
         <button type="btn btn-information" name="button" onclick="document.getElementById('advancedSearch').removeAttribute('hidden')
-            " style="border:none;color: blue;background-color: white;font-size: 14px;">Advanced Search</button>
+            " style="border:none;color: blue;background-color: white;font-size: 14px; border-radius:30px;"><h6>Advanced Search</h6></button>
       </div>
     </div>
     <br>
-
     <div id="advancedSearch" style=" width: 700px;" hidden>
       <div class="fieldWrapper">
         {{ form.contributor_department.errors }}
@@ -24,6 +22,21 @@
         <br>
       </div>
       <br>
+      <div class="fieldWrapper">
+        {{ form.publisher.errors }}
+        {{ form.publisher.label_tag }}
+        {{ form.publisher }}
+        <br>
+      </div>
+      <br>
+      <div class="fieldWrapper">
+        {{ form.date_issued.errors }}
+        {{ form.date_issued.label_tag }}
+        {{ form.date_issued }}
+        <br>
+      </div>
+      <br>
+
 
       <div class="fieldWrapper">
         Dates between:
@@ -36,13 +49,6 @@
         {{ form.date2 }}
       </div>
     </div>
-
     <br>
-
   </form>
-
-  <!-- <div class="row justify-content-center padding">
-    <button type="btn btn-information" name="button" onclick="document.getElementById('advancedSearch').removeAttribute('hidden')
-    " style="border:none;color: blue;background-color: white;font-size: 14px;">Advanced Search</button>
-  </div> -->
 </div>

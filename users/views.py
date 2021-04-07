@@ -17,6 +17,9 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.core.files.storage import FileSystemStorage
+import bleach
 
 #     form_class = CustomUserCreationForm
 #     success_url = reverse_lazy('login')
@@ -122,33 +125,6 @@ def historysave(request, form, whattosearch):
         searchhistorystore.save()
 
 
-def filtersearchtext(form):
-
-    searchtext = form.cleaned_data['searchtext']
-    whattosearch = {'title': searchtext}
-
-    contributor_department = form.cleaned_data['contributor_department']
-    if contributor_department != '':
-        whattosearch['contributor_department'] = contributor_department
-
-    contributor_author = form.cleaned_data['contributor_author']
-    if contributor_author != '':
-        whattosearch['contributor_author'] = contributor_author
-
-    contributor_committeechair = form.cleaned_data['contributor_committeechair']
-    if contributor_committeechair != '':
-        whattosearch['contributor_committeechair'] = contributor_committeechair
-
-    description_degree = form.cleaned_data['description_degree']
-    if description_degree != '':
-        whattosearch['description_degree'] = description_degree
-
-    whattosearch['date1'] = str(form.cleaned_data['date1'])
-    whattosearch['date2'] = str(form.cleaned_data['date2'])
-
-    return whattosearch
-
-
 def SERPView(request):
     template_name = 'serp.html'
 
@@ -165,7 +141,10 @@ def SERPView(request):
         searchtext = searchtext+"between " + \
             whattosearch['date1']+" and "+whattosearch['date2']
 
-        args = {'form': form, 'msg': msg, 'output': output, 'text': searchtext}
+        total_docs=len(output)
+        output  =  paginationfun(output,  request,  10)
+
+        args = {'form': form, 'msg': msg, 'output': output, 'text': searchtext, 'total_docs':total_docs}
         return render(request, template_name, args)
 
     if request.method == 'POST':
@@ -223,3 +202,125 @@ def SERPdetailsView(request):
         return render(request, template_name, args)
 
     return render(request, template_name)
+
+
+def paginationfun(output, request, numpages):
+    page = request.GET.get('page', 5)
+    # arg_1: list of objects & arg_2: num of objects per page
+    paginator = Paginator(output, numpages)
+    try:
+        output = paginator.page(page)
+    except PageNotAnInteger:
+        output = paginator.page(1)
+    except EmptyPage:
+        output = paginator.page(paginator.num_pages)
+
+    return output
+
+
+def UploadView(request):
+
+    msg = 0
+    if request.method == 'GET':
+        form = UploadForm()
+
+    if request.method == 'POST':
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+
+            whattoindex = {}
+            # indexing strings
+            whattoindex['title'] = form.cleaned_data["title"]
+            whattoindex['contributor_author'] = form.cleaned_data["contributor_author"]
+            whattoindex['description_abstract'] = form.cleaned_data["description_abstract"]
+            whattoindex['contributor_committeechair'] = form.cleaned_data["contributor_committeechair"]
+            whattoindex['contributor_department'] = form.cleaned_data["contributor_department"]
+            whattoindex['date_issued'] = str(form.cleaned_data["date_issued"])
+            whattoindex['identifier_sourceurl'] = form.cleaned_data["identifier_sourceurl"]
+
+            # Uploading comitte membsers into list
+            comitmembs = form.cleaned_data["contributor_committeemember"]
+            try:
+                comitmembs = comitmembs.split('"')[1::2]
+                if len(comitmembs) == 0:
+                    comitmembs = form.cleaned_data["contributor_committeemember"]
+                    comitmembs = comitmembs.split()[1::2]
+                if len(comitmembs) == 0:
+                    comitmembs = [
+                        form.cleaned_data["contributor_committeemember"]]
+            except:
+                comitmembs = [form.cleaned_data["contributor_committeemember"]]
+            whattoindex['contributor_committeemember'] = comitmembs
+
+            # Uploading subject into list
+            keywords = form.cleaned_data["contributor_committeemember"]
+            try:
+                keywords = keywords.split('"')[1::2]
+                if len(keywords) == 0:
+                    keywords = form.cleaned_data["subject"]
+                    keywords = keywords.split()[1::2]
+                if len(keywords) == 0:
+                    keywords = [form.cleaned_data["subject"]]
+            except:
+                keywords = [form.cleaned_data["subject"]]
+            whattoindex['subject'] = keywords
+
+            # uplodaing thehandle number by querying the model database
+            handleobjects = HandleModel.objects.all()
+            if len(handleobjects) == 0:
+                handlenum = 29581
+            else:
+                handlenum = int(handleobjects[len(handleobjects)-1].handle)+1
+            # increasing the current handle number by 1 in the database
+            if request.user.is_authenticated:
+                handlestore = form.save(commit=False)
+                handlestore.user = request.user
+                handlestore.handle = str(handlenum)
+                handlestore.save()
+            whattoindex['handle'] = handlenum
+
+            # Uploading the relation_haspart into list
+            uploaded_file = request.FILES['file']
+            fs = FileSystemStorage("media/dissertation/"+str(handlenum)+"/")
+            fs.save(uploaded_file.name, uploaded_file)
+            whattoindex['relation_haspart'] = [uploaded_file.name]
+            output, msg = elasticsearchfun(whattoindex, type="index")
+
+        else:
+            form = UploadForm()
+
+    args = {"form": form}
+
+    return render(request, 'upload.html', args)
+
+
+def bleachcleanfun(form, arg):
+    return bleach.clean(form.cleaned_data[arg], strip=True, tags=[''])
+
+
+def filtersearchtext(form):
+
+    searchtext = bleachcleanfun(form, 'searchtext')
+    whattosearch = {'title': searchtext}
+
+    contributor_department = bleachcleanfun(form, 'contributor_department')
+    if contributor_department != '':
+        whattosearch['contributor_department'] = contributor_department
+
+    contributor_author = bleachcleanfun(form, 'contributor_author')
+    if contributor_author != '':
+        whattosearch['contributor_author'] = contributor_author
+
+    contributor_committeechair = bleachcleanfun(
+        form, 'contributor_committeechair')
+    if contributor_committeechair != '':
+        whattosearch['contributor_committeechair'] = contributor_committeechair
+
+    description_degree = bleachcleanfun(form, 'description_degree')
+    if description_degree != '':
+        whattosearch['description_degree'] = description_degree
+
+    whattosearch['date1'] = str(form.cleaned_data['date1'])
+    whattosearch['date2'] = str(form.cleaned_data['date2'])
+
+    return whattosearch

@@ -19,4 +19,6 @@ urlpatterns = [
 
     path('serpdetails/', views.SERPdetailsView, name='serpdetails'),
 
+    path('upload/', views.UploadView, name='upload'),
+
 ]

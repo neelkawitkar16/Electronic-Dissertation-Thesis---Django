@@ -1,9 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import CustomUser, SearchResultHistoryModel, HandleModel
-
 from django.forms import CheckboxInput, HiddenInput
 import datetime
+
 
 class CustomUserCreationForm(UserCreationForm):
 
@@ -26,7 +26,9 @@ class CustomUserChangeForm(UserChangeForm):
         fields = ('email',)  # new
 
 
-# --------------------------------------------
+
+
+
 class HomeForm(forms.ModelForm):
     searchtext = forms.CharField(max_length=150, required=True,
                                  widget=forms.TextInput(attrs={'class': 'form-control',
@@ -47,7 +49,7 @@ class HomeForm(forms.ModelForm):
     description_degree = forms.CharField(max_length=150, required=False,
                                          widget=forms.TextInput(attrs={'class': 'form-control',
                                                                        'placeholder': 'PhD,...'}))
-    
+
     publisher = forms.CharField(max_length=150, required=False,
                                 widget=forms.TextInput(attrs={'class': 'form-control',
                                                                        'placeholder': 'Eg: Virginia Tech'}))
@@ -65,8 +67,6 @@ class HomeForm(forms.ModelForm):
     class Meta:
         model = SearchResultHistoryModel
         fields = ('searchtext',)
-
-# -------------------------For uploading files-------------------------------------------------
 
 
 class UploadForm(forms.ModelForm):
@@ -115,11 +115,9 @@ class UploadForm(forms.ModelForm):
                                            )
 
     file = forms.FileField(required=True)
-
     handle = forms.CharField(
         max_length=500, required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = HandleModel
         fields = ('handle',)
-# --------------------------------------------

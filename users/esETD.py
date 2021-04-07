@@ -50,7 +50,6 @@ class elasticsearchETD:
         except:
             self.connection = "Notsuccessful"
 
-#------function for single query using ES--------
     def singlequery(self, whattosearch):
 
         body = {
@@ -87,7 +86,6 @@ class elasticsearchETD:
                 output.append(dum)
         return output, msg
 
-#------function for multi query using ES--------
     def multiquery(self, whattosearch, date1, date2):
 
         body = {
@@ -149,7 +147,6 @@ class elasticsearchETD:
                 output.append(dum)
         return output, msg
 
-#------function for handle query using ES--------
     def handlequery(self, whattosearch):
 
         body = {
@@ -185,7 +182,6 @@ class elasticsearchETD:
 
         return output, msg
 
-#------function to index using ES--------
     def elasticsearchindex(self, whattoindex):
 
         storeindex = {}
@@ -221,7 +217,9 @@ class elasticsearchETD:
 
         return output, msg
 
-#------------ELastic search function access elasticsearch class-----------------
+
+
+
 
 
 def elasticsearchfun(whattosearch, type="allquery"):

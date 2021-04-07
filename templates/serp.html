@@ -7,7 +7,10 @@
 {% include "search.html" %}
 
 {% if msg%}
-<p> Found about {{output|length}} results for <b>{{text}}</b></p>
+<p> Found about {{total_docs}} results for <b>{{text}}</b></p>
+
+
+{% include "pagination.html" %}
 
 {% for item in output %}
 <div style="margin: 15px 50px 75px 10px;">
@@ -22,9 +25,9 @@
 
       <brsmall>
       <b>Abstract</b>: {{item.description_abstract|slice:":210"}}...
-      <form action="/serpdetails/" method="POST" style="display: inline-block;" target="_blank">
+      <form action="/serpdetails/" method="POST" style="display: inline-block;">
         {%csrf_token%}
-        <button class="search-domain btn btn-primary px-2" type="submit" name="handle" value={{item.handle}}
+        <button class="btn btn-info  btn-sm" type="submit" name="handle" value={{item.handle}}
           style="border:none;color: white;">More info</button>
       </form>
       <br>
@@ -41,4 +44,6 @@
 {% endif %}
 
 
-{% endblock content %}
+
+{% endblock content %}  
+                  

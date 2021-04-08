@@ -10,8 +10,6 @@
 <p> Found about {{total_docs}} results for <b>{{text}}</b></p>
 
 
-{% include "pagination.html" %}
-
 {% for item in output %}
 <div style="margin: 15px 50px 75px 10px;">
   <div class="row">
@@ -38,6 +36,8 @@
 </div>
 <brsmall>
 {%endfor%}
+
+{% include "pagination.html" %}
 
 {%else%}
 <h5>{{output.0}}</h5>

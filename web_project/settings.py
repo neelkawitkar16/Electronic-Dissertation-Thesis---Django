@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'web_project.wsgi.application'
 DATABASES = {
 'default': {
     'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'webprogramming',
+    'NAME': 'webprogrammingneel',
     'USER': 'root',
     'PASSWORD': '',
     'HOST': '',

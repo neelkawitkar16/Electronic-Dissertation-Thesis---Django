@@ -21,4 +21,6 @@ urlpatterns = [
 
     path('upload/', views.UploadView, name='upload'),
 
+    path('claim/', views.ClaimSubmitView, name='claim'),
+
 ]

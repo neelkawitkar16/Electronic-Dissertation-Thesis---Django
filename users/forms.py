@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import CustomUser, SearchResultHistoryModel, HandleModel
+from .models import CustomUser, SearchResultHistoryModel, HandleModel, ClaimModel
 from django.forms import CheckboxInput, HiddenInput
 import datetime
 
@@ -121,3 +121,32 @@ class UploadForm(forms.ModelForm):
     class Meta:
         model = HandleModel
         fields = ('handle',)
+
+
+#claim form
+CAN_YOU_REPRODUCE_CLAIM = [
+    ('yes', 'Yes'),
+    ('no', 'No'),
+    ('partially', 'Partially')
+]
+
+
+class ClaimForm(forms.ModelForm):
+    claim_field = forms.CharField(max_length=500, required=True,
+                                  help_text="Eg: A reaction chamber for producing hydrogen for fuel cells (100 characters max.)")
+
+    Can_you_reproduce_this_claim = forms.ChoiceField(
+        widget=forms.RadioSelect, choices=CAN_YOU_REPRODUCE_CLAIM)
+
+    source_Code = forms.CharField(
+        max_length=100, help_text="Enter the URL of your sourcecode", required=False)
+
+    datasets = forms.CharField(
+        max_length=100, help_text="Enter the URL of your dataset", required=False)
+
+    experiments_and_results = forms.CharField(
+        max_length=1000, widget=forms.Textarea(attrs={'rows': 5}))
+
+    class Meta:
+        model = ClaimModel
+        fields = ('claim_field',)

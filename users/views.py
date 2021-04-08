@@ -3,8 +3,8 @@ from django import forms
 
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
-from .models import SearchResultHistoryModel, HandleModel
-from .forms import CustomUserCreationForm, HomeForm, UploadForm
+from .models import SearchResultHistoryModel, HandleModel,  ClaimModel
+from .forms import CustomUserCreationForm, HomeForm, UploadForm, ClaimForm
 from .token_generator import account_activation_token
 from .esETD import elasticsearchfun
 
@@ -141,10 +141,11 @@ def SERPView(request):
         searchtext = searchtext+"between " + \
             whattosearch['date1']+" and "+whattosearch['date2']
 
-        total_docs=len(output)
-        output  =  paginationfun(output,  request,  10)
+        total_docs = len(output)
+        output = paginationfun(output,  request,  10)
 
-        args = {'form': form, 'msg': msg, 'output': output, 'text': searchtext, 'total_docs':total_docs}
+        args = {'form': form, 'msg': msg, 'output': output,
+                'text': searchtext, 'total_docs': total_docs}
         return render(request, template_name, args)
 
     if request.method == 'POST':
@@ -173,12 +174,24 @@ def SERPdetailsView(request):
     template_name = 'serpdetails.html'
 
     if request.method == 'GET':
-        return render(request, template_name)
+        form = ClaimForm()
 
-    if request.method == 'POST':
-        handle = request.POST.get('handle', None)
+        handle = request.session["handle"]
         whattosearch = {"handle": handle}
         output, msg = elasticsearchfun(whattosearch, type="handlequery")
+
+        allclaims_objects = ClaimModel.objects.filter(handle=handle)
+
+        allclaims = []
+        for arg in allclaims_objects:
+            dum_dict = {}
+            dum_dict["handle"] = arg.handle
+            dum_dict["source_Code"] = arg.source_Code
+            dum_dict["claim_field"] = arg.claim_field
+            dum_dict["Can_you_reproduce_this_claim"] = arg.Can_you_reproduce_this_claim
+            dum_dict["experiments_and_results"] = arg.experiments_and_results
+            dum_dict["datasets"] = arg.datasets
+            allclaims.append(dum_dict)
 
         try:
             pdfnames = output[0]["relation_haspart"]
@@ -198,7 +211,51 @@ def SERPdetailsView(request):
             fnames = []
             output = ["PDF files not found"]
 
-        args = {'output': output, 'msg': msg, 'fnames': fnames}
+        args = {'form': form, 'output': output,
+                'msg': msg, 'fnames': fnames, 'handle': handle, 'allclaims': allclaims, 'allclaims_length': len(allclaims)}
+        return render(request, template_name, args)
+
+    if request.method == 'POST':
+
+        form = ClaimForm()
+
+        handle = request.POST.get('handle', None)
+        whattosearch = {"handle": handle}
+        output, msg = elasticsearchfun(whattosearch, type="handlequery")
+
+        allclaims_objects = ClaimModel.objects.filter(handle=handle)
+
+        allclaims = []
+        for arg in allclaims_objects:
+            dum_dict = {}
+            dum_dict["handle"] = arg.handle
+            dum_dict["source_Code"] = arg.source_Code
+            dum_dict["claim_field"] = arg.claim_field
+            dum_dict["Can_you_reproduce_this_claim"] = arg.Can_you_reproduce_this_claim
+            dum_dict["experiments_and_results"] = arg.experiments_and_results
+            dum_dict["datasets"] = arg.datasets
+            allclaims.append(dum_dict)
+
+        try:
+            pdfnames = output[0]["relation_haspart"]
+            if str(type(pdfnames)) == "<class 'str'>":
+                pdfnames = [pdfnames]
+
+            fnames = []
+            for fname in pdfnames:
+                dumdict = {}
+                dumdict['url'] = "http://127.0.0.1:8000/media/dissertation/" + \
+                    handle+"/"+fname
+
+                dumdict['name'] = fname
+                fnames.append(dumdict)
+        except:
+            msg = 0
+            fnames = []
+            output = ["PDF files not found"]
+
+        args = {'form': form, 'output': output,
+                'msg': msg, 'fnames': fnames, 'handle': handle, 'allclaims': allclaims, 'allclaims_length': len(allclaims)}
         return render(request, template_name, args)
 
     return render(request, template_name)
@@ -289,7 +346,7 @@ def UploadView(request):
         else:
             form = UploadForm()
 
-    args = {"form": form}
+    args = {"form": form, "msg": msg}
 
     return render(request, 'upload.html', args)
 
@@ -324,3 +381,37 @@ def filtersearchtext(form):
     whattosearch['date2'] = str(form.cleaned_data['date2'])
 
     return whattosearch
+
+
+def ClaimSubmitView(request):
+
+    msg = 0
+    if request.method == 'GET':
+        print("Entered get")
+        form = ClaimForm()
+
+    if request.method == 'POST':
+        form = ClaimForm(request.POST)
+
+        if form.is_valid():
+
+            handle = request.POST.get('handle', None)
+
+            if request.user.is_authenticated:
+                claimstore = form.save(commit=False)
+                claimstore.user = request.user
+                claimstore.handle = str(handle)
+
+                claimstore.source_Code = form.cleaned_data['source_Code']
+                claimstore.claim_field = form.cleaned_data['claim_field']
+                claimstore.Can_you_reproduce_this_claim = form.cleaned_data[
+                    'Can_you_reproduce_this_claim']
+                claimstore.datasets = form.cleaned_data['datasets']
+                claimstore.experiments_and_results = form.cleaned_data['experiments_and_results']
+
+                claimstore.save()
+
+                request.session["handle"] = handle
+                return redirect('serpdetails')
+
+    return render(request, 'upload.html')

@@ -21,7 +21,24 @@ class HandleModel(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,)
     date = models.DateTimeField(auto_now=True)
 
-# class ClaimModel(models.Model):
-#     handle = models.CharField(max_length=500)
-#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,)
-#     date = models.DateTimeField(auto_now=True)
+
+class ClaimModel(models.Model):
+
+    handle = models.CharField(max_length=500)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,)
+    date = models.DateTimeField(auto_now=True)
+
+    # claim_num = models.IntegerField(null=True)
+
+    claim_field = models.CharField(
+        max_length=500)
+
+    Can_you_reproduce_this_claim = models.CharField(max_length=20)
+
+    source_Code = models.CharField(
+        max_length=100, help_text="Enter the URL of your sourcecode")
+
+    datasets = models.CharField(
+        max_length=100, help_text="Enter the URL of your dataset")
+
+    experiments_and_results = models.CharField(max_length=1000)

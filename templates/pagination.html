@@ -6,7 +6,8 @@
     {% if output.has_previous %}
     <li class="page-item">
       <a class="page-link" href="?page={{ output.previous_page_number }}" aria-label="Previous">
-        <span aria-hidden="true">Previous</span>
+        <span aria-hidden="true">
+          <= </span>
         <span class="sr-only">begin</span>
       </a>
     </li>
@@ -25,7 +26,7 @@
       {% if output.has_next %}
       <li class="page-item">
         <a class="page-link" href="?page={{ output.next_page_number }}" aria-label="Next">
-          <span aria-hidden="true">Next</span>
+          <span aria-hidden="true"> => </span>
           <span class="sr-only">end</span>
         </a>
       </li>

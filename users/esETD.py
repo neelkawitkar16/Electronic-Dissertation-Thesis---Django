@@ -209,17 +209,14 @@ class elasticsearchETD:
         res = self.es.search(index="etd", body=body)
 
         max_id = res["hits"]["total"]["value"]+1
-        self.es.index(index='etdsearch', doc_type='documents',
+
+        self.es.index(index='etd', doc_type='documents',
                       id=max_id, body=storeindex)
 
         output = ["Uploaded Successful"]
         msg = 1
 
         return output, msg
-
-
-
-
 
 
 def elasticsearchfun(whattosearch, type="allquery"):

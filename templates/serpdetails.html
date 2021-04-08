@@ -3,13 +3,6 @@
 
 {% block content %}
 
-<!-- <button onclick="goBack()">Go Back</button>
-
-<script>
-  function goBack() {
-    window.history.back();
-  }
-</script> -->
 
 <input type="button" style="margin-top: 10px;" class="btn btn-outline-dark btn-sm" value="Go Back to the Search Results"
   onclick="history.back(-1)" />
@@ -64,4 +57,27 @@
       <h5>{{output.0}}</h5>
       {% endif %}
 
-      {% endblock content %}
+{% if allclaims|length%}
+
+<h1>Previous claims:</h1>
+
+{% for claim in allclaims %}
+<!-- {{claim}} -->
+<div style="border: 4px dotted rgba(0, 0, 0, 0.932); padding:10px;">
+  <b>claim: </b>{{claim.claim_field}} <br>
+  <b>source_Code: </b>{{claim.source_Code}} <br>
+  <b>Can_you_reproduce_this_claim: </b>{{claim.Can_you_reproduce_this_claim}} <br>
+  <b>datasets: </b>{{claim.datasets}} <br>
+  <b>experiments_and_results: </b>{{claim.experiments_and_results}} <br>
+</div>
+<br>
+{% endfor %}
+
+
+{%else%}
+<h4>No claims yet on this thesis? Go on make your first claim now!</h4> <br>
+{% endif %}
+
+{% include "claim.html" %}
+
+{% endblock content %}  

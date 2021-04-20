@@ -42,3 +42,10 @@ class ClaimModel(models.Model):
         max_length=100, help_text="Enter the URL of your dataset")
 
     experiments_and_results = models.CharField(max_length=1000)
+
+
+class SaveItemModel(models.Model):
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, blank=True, null=True)
+    handle = models.CharField(max_length=500, blank=False, unique=True)
+    date = models.DateTimeField(auto_now=True)

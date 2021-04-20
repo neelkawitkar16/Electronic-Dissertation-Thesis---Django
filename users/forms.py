@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import CustomUser, SearchResultHistoryModel, HandleModel, ClaimModel
+from .models import CustomUser, SearchResultHistoryModel, HandleModel, ClaimModel, SaveItemModel
 from django.forms import CheckboxInput, HiddenInput
 import datetime
 
@@ -121,6 +121,13 @@ class UploadForm(forms.ModelForm):
     class Meta:
         model = HandleModel
         fields = ('handle',)
+
+
+class SaveItemForm(forms.ModelForm):
+    class Meta:
+        model = SaveItemModel
+        fields = ('handle',)
+
 
 
 #claim form

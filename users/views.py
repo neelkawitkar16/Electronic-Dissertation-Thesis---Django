@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
 from django import forms
 
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
-from .models import SearchResultHistoryModel, HandleModel,  ClaimModel
-from .forms import CustomUserCreationForm, HomeForm, UploadForm, ClaimForm
+from .models import SearchResultHistoryModel, HandleModel, ClaimModel, SaveItemModel
+from .forms import CustomUserCreationForm, HomeForm, UploadForm, ClaimForm, SaveItemForm
 from .token_generator import account_activation_token
 from .esETD import elasticsearchfun
 
@@ -191,6 +191,7 @@ def SERPdetailsView(request):
             dum_dict["Can_you_reproduce_this_claim"] = arg.Can_you_reproduce_this_claim
             dum_dict["experiments_and_results"] = arg.experiments_and_results
             dum_dict["datasets"] = arg.datasets
+            dum_dict["id"] = arg.id
             allclaims.append(dum_dict)
 
         try:
@@ -216,7 +217,7 @@ def SERPdetailsView(request):
         return render(request, template_name, args)
 
     if request.method == 'POST':
-
+        print("SERP details page")
         form = ClaimForm()
 
         handle = request.POST.get('handle', None)
@@ -234,6 +235,7 @@ def SERPdetailsView(request):
             dum_dict["Can_you_reproduce_this_claim"] = arg.Can_you_reproduce_this_claim
             dum_dict["experiments_and_results"] = arg.experiments_and_results
             dum_dict["datasets"] = arg.datasets
+            dum_dict["id"] = arg.id
             allclaims.append(dum_dict)
 
         try:
@@ -415,3 +417,80 @@ def ClaimSubmitView(request):
                 return redirect('serpdetails')
 
     return render(request, 'upload.html')
+
+
+def delete_claim_view(request):
+
+    if request.method == "POST":
+        print("CLAIM")
+
+        neel = request.POST.get('neel', None)
+        print(type(neel), request.session["handle"])
+        # print(ClaimModel.objects.filter(id=int(neel)))
+
+        # for arg in ClaimModel.objects.filter(id=int(neel)):
+        #    handle = arg.handle
+
+        ClaimModel.objects.filter(id=int(neel)).delete()
+        # request.session["handle"] = handle
+        return redirect('/serpdetails')
+
+
+def getuseritems(request):
+    usersitems = SaveItemModel.objects.filter(user_id=request.user.id)
+    output = []
+    for arg in usersitems:
+        whattosearch = {"handle": arg.handle}
+        dumoutput, msg = elasticsearchfun(whattosearch, type="handlequery")
+        dumoutput[0]["id"] = arg.id
+        output.append(dumoutput[0])
+    return output
+
+
+def SaveItemView(request):
+
+    template_name = 'saveitem.html'
+    if request.method == 'GET':
+        if request.user.is_authenticated:
+            form = SaveItemForm()
+            output = getuseritems(request)
+            numresults = len(output)
+            output = paginationfun(output, request, 5)
+
+            args = {'form': form, 'msgtext': "",
+                    'output': output, 'numresults': numresults}
+            return render(request, template_name, args)
+        else:
+            return redirect('home')
+
+    if request.method == 'POST':
+        handle = request.POST.get('handle', None)
+
+        try:
+            form = SaveItemForm()
+            saveitems = form.save(commit=False)
+            saveitems.user = request.user
+            saveitems.handle = handle
+            saveitems.save()
+            return redirect('saveitem')
+        except:
+            form = SaveItemForm()
+            output = getuseritems(request)
+            numresults = len(output)
+            output = paginationfun(output, request, 5)
+
+            args = {'form': form, 'msgtext': "Previously saved",
+                    'output': output, 'numresults': numresults}
+            return render(request, template_name, args)
+
+
+def DeleteItemView(request):
+    if request.method == 'GET':
+        return redirect('saveitem')
+    if request.method == 'POST':
+        deleteitemid = request.POST.get('deleteitemid', None)
+        if int(deleteitemid) == -1:
+            SaveItemModel.objects.filter(user_id=request.user.id).delete()
+        else:
+            SaveItemModel.objects.filter(id=deleteitemid).delete()
+        return redirect('saveitem')

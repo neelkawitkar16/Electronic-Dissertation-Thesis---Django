@@ -30,4 +30,6 @@ urlpatterns = [
 
     path('deleteitem/', views.DeleteItemView, name='deleteitem'),
 
-]
+    # path('like/', views.like, name='like'),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

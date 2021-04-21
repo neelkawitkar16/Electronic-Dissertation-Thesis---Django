@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
 from django import forms
+from django.http import HttpResponse
 
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
-from .models import SearchResultHistoryModel, HandleModel, ClaimModel, SaveItemModel
-from .forms import CustomUserCreationForm, HomeForm, UploadForm, ClaimForm, SaveItemForm
+from .models import SearchResultHistoryModel, HandleModel, ClaimModel, SaveItemModel, ClaimLikeModel
+from .forms import CustomUserCreationForm, HomeForm, UploadForm, ClaimForm, SaveItemForm, ClaimLikeForm
 from .token_generator import account_activation_token
 from .esETD import elasticsearchfun
 
@@ -145,7 +146,7 @@ def SERPView(request):
         output = paginationfun(output,  request,  10)
 
         args = {'form': form, 'msg': msg, 'output': output,
-                'text': searchtext, 'total_docs': total_docs}
+                'text': searchtext, 'total_docs': total_docs, "high_text_inp": whattosearch["title"]}
         return render(request, template_name, args)
 
     if request.method == 'POST':
@@ -180,6 +181,8 @@ def SERPdetailsView(request):
         whattosearch = {"handle": handle}
         output, msg = elasticsearchfun(whattosearch, type="handlequery")
 
+        pdfmsg, pdfnames = pdflinks(output, 0, handle)
+
         allclaims_objects = ClaimModel.objects.filter(handle=handle)
 
         allclaims = []
@@ -212,7 +215,7 @@ def SERPdetailsView(request):
             fnames = []
             output = ["PDF files not found"]
 
-        args = {'form': form, 'output': output,
+        args = {'form': form, 'output': output, 'pdfmsg': pdfmsg, 'pdfnames': pdfnames,
                 'msg': msg, 'fnames': fnames, 'handle': handle, 'allclaims': allclaims, 'allclaims_length': len(allclaims)}
         return render(request, template_name, args)
 
@@ -224,6 +227,8 @@ def SERPdetailsView(request):
         whattosearch = {"handle": handle}
         output, msg = elasticsearchfun(whattosearch, type="handlequery")
 
+        pdfmsg, pdfnames = pdflinks(output, 0, handle)
+
         allclaims_objects = ClaimModel.objects.filter(handle=handle)
 
         allclaims = []
@@ -239,6 +244,7 @@ def SERPdetailsView(request):
             allclaims.append(dum_dict)
 
         try:
+            print("NEEL")
             pdfnames = output[0]["relation_haspart"]
             if str(type(pdfnames)) == "<class 'str'>":
                 pdfnames = [pdfnames]
@@ -256,11 +262,35 @@ def SERPdetailsView(request):
             fnames = []
             output = ["PDF files not found"]
 
-        args = {'form': form, 'output': output,
+        args = {'form': form, 'output': output, 'pdfmsg': pdfmsg, 'pdfnames': pdfnames,
                 'msg': msg, 'fnames': fnames, 'handle': handle, 'allclaims': allclaims, 'allclaims_length': len(allclaims)}
         return render(request, template_name, args)
 
     return render(request, template_name)
+
+
+def pdflinks(output, hnum, handle):
+
+    try:
+        pdfmsg = 1
+        rawpdfnames = output[hnum]["relation_haspart"]
+        if str(type(rawpdfnames)) == "<class 'str'>":
+            rawpdfnames = [rawpdfnames]
+
+        pdfnames = []
+        for fname in rawpdfnames:
+            dumdict = {}
+            dumdict['url'] = "http://127.0.0.1:8000/media/dissertation/" + \
+                handle+"/"+fname
+
+            dumdict['name'] = fname
+            pdfnames.append(dumdict)
+    except:
+        pdfmsg = 0
+        pdfnames = []
+
+    return pdfmsg, pdfnames
+
 
 
 def paginationfun(output, request, numpages):
@@ -385,6 +415,18 @@ def filtersearchtext(form):
     return whattosearch
 
 
+def DeleteItemView(request):
+    if request.method == 'GET':
+        return redirect('saveitem')
+    if request.method == 'POST':
+        deleteitemid = request.POST.get('deleteitemid', None)
+        if int(deleteitemid) == -1:
+            SaveItemModel.objects.filter(user_id=request.user.id).delete()
+        else:
+            SaveItemModel.objects.filter(id=deleteitemid).delete()
+        return redirect('saveitem')
+
+
 def ClaimSubmitView(request):
 
     msg = 0
@@ -484,13 +526,29 @@ def SaveItemView(request):
             return render(request, template_name, args)
 
 
-def DeleteItemView(request):
+def index(request):
+    posts = ClaimLikeModel.objects.all()
+    form = ClaimLikeForm
+    context = {
+        'form': form,
+        'posts': posts
+    }
+
+    return render(request, 'index.html', context)
+
+
+def like(request):
     if request.method == 'GET':
-        return redirect('saveitem')
-    if request.method == 'POST':
-        deleteitemid = request.POST.get('deleteitemid', None)
-        if int(deleteitemid) == -1:
-            SaveItemModel.objects.filter(user_id=request.user.id).delete()
+        if 'star' in request.GET:
+            like = ClaimLikeModel.objects.get(id=int(request.GET['star']))
+            handle = int(request.GET.get('handle'))
+            like.star = not like.star
+            like.save()
+            return HttpResponse('OK')
         else:
-            SaveItemModel.objects.filter(id=deleteitemid).delete()
-        return redirect('saveitem')
+            form = ClaimLikeForm()
+            like = form.save(commit=False)
+            like.user = request.user
+            like.handle = handle
+            like.save()
+            return HttpResponse('NG')

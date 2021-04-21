@@ -44,6 +44,12 @@ class ClaimModel(models.Model):
     experiments_and_results = models.CharField(max_length=1000)
 
 
+class ClaimLikeModel(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,)
+    handle = models.CharField(max_length=500)
+    star = models.BooleanField(default=False)
+
+
 class SaveItemModel(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, blank=True, null=True)

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import CustomUser, SearchResultHistoryModel, HandleModel, ClaimModel, SaveItemModel
+from .models import CustomUser, SearchResultHistoryModel, HandleModel, ClaimModel, SaveItemModel, ClaimLikeModel
 from django.forms import CheckboxInput, HiddenInput
 import datetime
 
@@ -157,3 +157,9 @@ class ClaimForm(forms.ModelForm):
     class Meta:
         model = ClaimModel
         fields = ('claim_field',)
+
+
+class ClaimLikeForm(forms.ModelForm):
+    class Meta:
+        model = ClaimLikeModel
+        fields = ('star', 'handle',)

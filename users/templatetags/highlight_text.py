@@ -9,9 +9,9 @@ register = template.Library()
 def highlight_text(text, search):
     words = search.split()
     for word in words:
-        text = text.replace(word.lower(
-        ), '<span style="background-color: #FFFF00">{}</span>'.format(word.lower()))
-        text = text.replace(word.capitalize(
-        ), '<span style="background-color: #FFFF00">{}</span>'.format(word.capitalize()))
+        text = text.replace(
+            word.lower(), '<span style="background-color: #FFFF00">{}</span>'.format(word.lower()))
+        text = text.replace(
+            word.capitalize(), '<span style="background-color: #FFFF00">{}</span>'.format(word.capitalize()))
 
     return mark_safe(text)

@@ -9,18 +9,17 @@
 
 <p> Found about {{numresults}} in your profile </p>
 
-<form action="/deleteitem/" method="POST" style="display: inline-block;">
+<!-- <form action="/deleteitem/" method="POST" style="display: inline-block;">
   {%csrf_token%}
   <button class="btn btn-danger btn-sm" type="submit" name="deleteitemid" value=-1
     style="display: inline-block;margin: 0;">Delete all items</button>
 </form>
-<br>
+<br> -->
 
-{% include "pagination.html" %}
 
 {% for item in output %}
 <div class="row">
-  <div class="column" style="background-color:#eee;">
+  <div class="column" style="background-color:#eee; border: 4px solid black; padding:20px; border-radius: 30px;">
 
     <a href={{item.identifier_sourceurl}}><b>{{item.title}}</b></a>
     <brsmall>
@@ -34,8 +33,8 @@
         <!-- <b>Abstract</b>: {{item.description_abstract|slice:":210"}}... -->
         <form action="/serpdetails/" method="POST" style="display: inline-block;" target="_blank">
           {%csrf_token%}
-          <button type="submit" name="handle" value={{item.handle}} style="border:none;color: blue;">More
-            details</button>
+          <button class="btn btn-info  btn-sm" type="submit" name="handle" value={{item.handle}}
+            style="border:none;color: white;">More info</button>
         </form>
         <br>
 
@@ -49,7 +48,7 @@
 </div>
 <brsmall>
   {%endfor%}
-
+<br>
   {% include "pagination.html" %}
 
 

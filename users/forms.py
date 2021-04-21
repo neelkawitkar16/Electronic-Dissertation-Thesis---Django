@@ -162,4 +162,4 @@ class ClaimForm(forms.ModelForm):
 class ClaimLikeForm(forms.ModelForm):
     class Meta:
         model = ClaimLikeModel
-        fields = ('star', 'handle',)
+        fields = ('id',)

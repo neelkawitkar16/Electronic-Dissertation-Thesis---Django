@@ -218,50 +218,22 @@ class elasticsearchETD:
 
         return output, msg
 
+#------function for spellcheck using ES--------
+    def spellcheck(self, whattosearch):
 
-def elasticsearchfun(whattosearch, type="allquery"):
+        body = {
+        "suggest": {
+            "mytermsuggester": {
+                    "text": whattosearch,
+                        "term": {"field": "description_abstract"}
+                    }
+                    }
+                    }
 
-    whattosearch = copy.deepcopy(whattosearch)
+        res = self.es.search(index="etdsearch", body=body)
 
-    esobject = elasticsearchETD()
-
-    if esobject.connection == "Notsuccessful":
-        msg = 0
-        output = ["Cannot reach ElasticSearch on http://localhost:9200"]
-    else:
-        msg = 1
-        if type == "allquery":
-            date1 = whattosearch["date1"]
-            date2 = whattosearch["date2"]
-            del whattosearch["date1"]
-            del whattosearch["date2"]
-            output, msg = esobject.multiquery(whattosearch, date1, date2)
-        elif type == "handlequery":
-            output, msg = esobject.handlequery(whattosearch)
-        elif type == "index":
-            output, msg = esobject.elasticsearchindex(whattosearch)
-        else:
-            msg = 0
-            output = ["Wrong input type in elasticsearchfun"]
-
-    return output, msg
-
-
-def spellcheck(self, whattosearch):
-
-    body = {
-         "suggest": {
-              "mytermsuggester": {
-                   "text": whattosearch,
-                    "term": {"field": "description_abstract"}
-                   }
-              }
-         }
-
-     res = self.es.search(index="etdsearch", body=body)
-
-      totalquerycount = len(res["suggest"]["mytermsuggester"])
-       if totalquerycount == 0:
+        totalquerycount = len(res["suggest"]["mytermsuggester"])
+        if totalquerycount == 0:
             msg = 0
             output = [" "]
         else:
@@ -271,8 +243,6 @@ def spellcheck(self, whattosearch):
                 dum = arg["text"]
                 output.append(dum)
         return output, msg
-
-#------------ELastic search function access elasticsearch class-----------------
 
 
 def elasticsearchfun(whattosearch, type="allquery"):
@@ -301,3 +271,5 @@ def elasticsearchfun(whattosearch, type="allquery"):
         else:
             msg = 0
             output = ["Wrong input type in elasticsearchfun"]
+
+    return output, msg

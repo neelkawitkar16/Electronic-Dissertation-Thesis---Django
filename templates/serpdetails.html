@@ -93,6 +93,16 @@ Net: <span class="" id="{{claim.idnetliked}}">{{claim.netlikes}}</span>
 <!-- --------------------------------------------------------------- -->
 <!-- --------------------------------------------------------------- -->
 <!-- --------------------------------------------------------------- -->
+{% else %}
+
+<span class="" id="">{{claim.totallikes}}</span>
+<a name="" style="border:none; font-size:30px;color: black;" id="co">
+  <i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
+
+<span class="" id="">{{claim.totalunlikes}}</span>
+<a name="" style="border:none; font-size:30px;color: black;" id="co">
+  <i class="fa fa-thumbs-down" aria-hidden="true"></i></a>
+
 {% endif %}
 
 
@@ -148,3 +158,4 @@ Net: <span class="" id="{{claim.idnetliked}}">{{claim.netlikes}}</span>
 </script>
 
 {% endblock content %}  
+  

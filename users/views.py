@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
 from django import forms
@@ -133,6 +134,26 @@ def SERPView(request):
     if request.method == 'GET':
         form = HomeForm()
         whattosearch = request.session["whattosearch"]
+
+        suggested_search = ""
+        print("whattosearch.",  whattosearch["title"])
+        for arg in whattosearch["title"].split():
+            output, msg = elasticsearchfun(
+                arg, type="spellcheck")
+            print(arg, output)
+            if len(output) > 1:
+                suggested_search = suggested_search+output[1]+" "
+            else:
+                suggested_search = suggested_search+arg+" "
+        suggested_search = suggested_search[:-1]
+        print(suggested_search)
+        if suggested_search == whattosearch["title"]:
+            wrongspellflag = 0
+        else:
+            wrongspellflag = 1
+
+        whattosearch["title"] = suggested_search
+
         output, msg = elasticsearchfun(whattosearch)
 
         searchtext = ''
@@ -147,7 +168,10 @@ def SERPView(request):
         output = paginationfun(output,  request,  10)
 
         args = {'form': form, 'msg': msg, 'output': output,
-                'text': searchtext, 'total_docs': total_docs, "high_text_inp": whattosearch["title"]}
+                'text': searchtext, 'total_docs': total_docs,
+                "high_text_inp": whattosearch["title"],
+                "wrongspellflag": wrongspellflag,
+                "suggested_search": suggested_search}
         return render(request, template_name, args)
 
     if request.method == 'POST':
@@ -185,7 +209,6 @@ def SERPdetailsView(request):
         pdfmsg, pdfnames = pdflinks(output, 0, handle)
 
         allclaims_objects = ClaimModel.objects.filter(handle=handle)
-
         allclaims = []
         for arg in allclaims_objects:
             dum_dict = {}
@@ -195,7 +218,30 @@ def SERPdetailsView(request):
             dum_dict["Can_you_reproduce_this_claim"] = arg.Can_you_reproduce_this_claim
             dum_dict["experiments_and_results"] = arg.experiments_and_results
             dum_dict["datasets"] = arg.datasets
+
+            if request.user.id == arg.user_id:
+                dum_dict["authorized_user"] = 1
+            else:
+                dum_dict["authorized_user"] = 0
+
             dum_dict["id"] = arg.id
+
+            dum_dict["idliked"] = str(arg.id)+",Liked"
+            dum_dict["idunliked"] = str(arg.id)+",Unliked"
+            dum_dict["idnetliked"] = str(arg.id)+",Net"
+
+            dum_dict["totallikes"] = len(
+                ClaimLikeModel.objects.filter(claim_id=arg.id, star=1))
+            dum_dict["totalunlikes"] = len(
+                ClaimLikeModel.objects.filter(claim_id=arg.id, star=0))
+            dum_dict["netlikes"] = dum_dict["totallikes"] - \
+                dum_dict["totalunlikes"]
+
+            dum_dict["liked"] = len(
+                ClaimLikeModel.objects.filter(claim_id=arg.id, user_id=request.user.id, star=1))
+            dum_dict["unliked"] = len(
+                ClaimLikeModel.objects.filter(claim_id=arg.id, user_id=request.user.id, star=0))
+
             allclaims.append(dum_dict)
 
         try:
@@ -230,7 +276,6 @@ def SERPdetailsView(request):
         pdfmsg, pdfnames = pdflinks(output, 0, handle)
 
         allclaims_objects = ClaimModel.objects.filter(handle=handle)
-
         allclaims = []
         for arg in allclaims_objects:
             dum_dict = {}
@@ -240,6 +285,13 @@ def SERPdetailsView(request):
             dum_dict["Can_you_reproduce_this_claim"] = arg.Can_you_reproduce_this_claim
             dum_dict["experiments_and_results"] = arg.experiments_and_results
             dum_dict["datasets"] = arg.datasets
+
+            if request.user.id == arg.user_id:
+                dum_dict["authorized_user"] = 1
+            else:
+                dum_dict["authorized_user"] = 0
+
+            dum_dict["id"] = arg.id
 
             dum_dict["idliked"] = str(arg.id)+",Liked"
             dum_dict["idunliked"] = str(arg.id)+",Unliked"
@@ -308,7 +360,7 @@ def pdflinks(output, hnum, handle):
 
 
 def paginationfun(output, request, numpages):
-    page = request.GET.get('page', 5)
+    page = request.GET.get('page', 1)
     # arg_1: list of objects & arg_2: num of objects per page
     paginator = Paginator(output, numpages)
     try:
@@ -481,12 +533,9 @@ def delete_claim_view(request):
         print("CLAIM")
 
         neel = request.POST.get('neel', None)
-        print(type(neel), request.session["handle"])
-        # print(ClaimModel.objects.filter(id=int(neel)))
+        print(neel, request.session["handle"])
 
-        # for arg in ClaimModel.objects.filter(id=int(neel)):
-        #    handle = arg.handle
-
+        ClaimLikeModel.objects.filter(claim_id=int(neel)).delete()
         ClaimModel.objects.filter(id=int(neel)).delete()
         # request.session["handle"] = handle
         return redirect('/serpdetails')
@@ -614,3 +663,26 @@ def ClaimLikeView(request):
         result["netcount"] = result["likecount"] - result["unlikecount"]
 
         return JsonResponse(result)
+
+
+# ---------------------------------------------------------------
+
+def AutoCompleteView(request):
+
+    if request.method == 'GET':
+        textsearch = request.GET.get('term', '')
+
+        output, msg = elasticsearchfun(
+            textsearch.split()[-1], type="spellcheck")
+        for i in range(0, len(output)):
+            dum = ""
+            for arg in textsearch.split()[:-1]:
+                dum = dum+" "+arg
+            output[i] = dum+" "+output[i]
+
+        data = json.dumps(output)
+        mimetype = 'application/json'
+        return HttpResponse(data, mimetype)
+
+    if request.method == 'POST':
+        pass

@@ -218,19 +218,18 @@ class elasticsearchETD:
 
         return output, msg
 
-#------function for spellcheck using ES--------
+# ------function for spellcheck using ES--------
     def spellcheck(self, whattosearch):
 
         body = {
-        "suggest": {
-            "mytermsuggester": {
+            "suggest": {
+                "mytermsuggester": {
                     "text": whattosearch,
-                        "term": {"field": "description_abstract"}
-                    }
-                    }
-                    }
-
-        res = self.es.search(index="etdsearch", body=body)
+                    "term": {"field": "description_abstract"}
+                }
+            }
+        }
+        res = self.es.search(index="etd", body=body)
 
         totalquerycount = len(res["suggest"]["mytermsuggester"])
         if totalquerycount == 0:
@@ -238,10 +237,12 @@ class elasticsearchETD:
             output = [" "]
         else:
             msg = 1
+            # output  =  []
             output = [res["suggest"]["mytermsuggester"][0]["text"]]
             for arg in res["suggest"]["mytermsuggester"][0]["options"]:
                 dum = arg["text"]
                 output.append(dum)
+
         return output, msg
 
 
